@@ -11,7 +11,7 @@ This module requires Form::Processor and DBIx::Class. Many users
 will probably use it with Catalyst and Catalyst::Plugin::Form::Processor,
 though they are not required.
 
-This is version 0.01, the first released version.
+This is version 0.02
 
 
 INSTALLATION

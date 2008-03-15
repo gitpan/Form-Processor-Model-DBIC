@@ -2,4 +2,7 @@ Revision history for Form-Processor-Model-DBIC
 
 0.01    03/13/2008 
         First version, released on an unsuspecting world.
-
+0.02    03/15/2008
+        Fix bug using pre_load_form
+        Add "| html" to input example
+        Add doc for field "id"

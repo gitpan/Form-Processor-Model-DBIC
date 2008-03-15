@@ -4,7 +4,7 @@ use warnings;
 use base 'Form::Processor';
 use Carp;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 NAME
 
@@ -12,7 +12,7 @@ Form::Processor::Model::DBIC - Model class for Form Processor using DBIx::Class
 
 =head1 SYNOPSIS
 
-Create a form class, templates, and call F::P from a controller.
+You need to create a form class, templates, and call F::P from a controller.
 
 Create a Form, subclassed from Form::Processor::Model::DBIC
 
@@ -67,7 +67,7 @@ For an input field:
    <p>
    [% f = form.field('address') %]
    <label class="label" for="[% f.name %]">[% f.label || f.name %]</label>
-   <input type="[% f.type %]" name="[% f.name %]" id="[% f.name %]" value="[% f.value %]">
+   <input type="[% f.type %]" name="[% f.name %]" id="[% f.name %]" value="[% f.value | html %]">
    </p>
 
 
@@ -176,6 +176,7 @@ L<Catalyst::Plugin::Form::Processor>, and in the individual field classes.
    type          Field type. From a F::P::Field class: 'Text', 'Select', etc
    required      Field is required
    required_message  If this field is required, the message to display on failure 
+   id            Useful for javascript that requires unique id. Set in Field.
    label         Text label. Not used by F::P, but useful in templates 
    order         Set the order for fields. Used by sorted_fields, templates. 
    widget        Used by templates to decide widget usage. Set by field classes.
@@ -779,13 +780,12 @@ sub build_form
    my $profile = $self->profile;
    croak "Please define 'profile' method in subclass" unless ref $profile eq 'HASH';
 
-   # access item to make sure it's initialized. Required for auto_fields.
-   my $item = $self->item;
    for my $group ( 'required', 'optional', 'fields' )
    {
       my $required = 'required' eq $group;
       $self->_build_fields( $profile->{$group}, $required );
       my $auto_fields = $profile->{ 'auto_' . $group } || next;
+      my $item = $self->item;  # need init_item for auto fields
       $self->_build_fields( $auto_fields, $required );
    }
 }
