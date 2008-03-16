@@ -55,8 +55,7 @@ Checked out to <a href="[%base _ 'borrower/view/' _ form.item.borrower.id%]">[%f
      [% END %] 
    </select>
    [% SET f = form.field('borrowed') %]
-     <input  type="hidden" name="[% f.name %]" id="[% f.name %]" value="[%
-f.value %]">
+     <input  type="hidden" name="[% f.name %]" id="[% f.name %]">
    </p>
 </form>
 [%END%]

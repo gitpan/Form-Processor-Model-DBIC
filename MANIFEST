@@ -4,12 +4,6 @@ example/BookDB/Changes
 example/BookDB/db/book.db
 example/BookDB/db/bookdb.sql
 example/BookDB/lib/BookDB.pm
-example/BookDB/lib/BookDB/CDBI-Model/DB.pm
-example/BookDB/lib/BookDB/CDBI-Model/DB/Book.pm
-example/BookDB/lib/BookDB/CDBI-Model/DB/Borrower.pm
-example/BookDB/lib/BookDB/CDBI-Model/DB/Format.pm
-example/BookDB/lib/BookDB/CDBI-Model/DB/Genre.pm
-example/BookDB/lib/BookDB/Controller/Author.pm
 example/BookDB/lib/BookDB/Controller/Book.pm
 example/BookDB/lib/BookDB/Controller/Borrower.pm
 example/BookDB/lib/BookDB/Controller/Root.pm
@@ -20,7 +14,6 @@ example/BookDB/lib/BookDB/Form/Borrower.pm
 example/BookDB/lib/BookDB/Form/Borrower.pm.auto
 example/BookDB/lib/BookDB/Model/DB.pm
 example/BookDB/lib/BookDB/Schema/DB.pm
-example/BookDB/lib/BookDB/Schema/DB/Author.pm
 example/BookDB/lib/BookDB/Schema/DB/Book.pm
 example/BookDB/lib/BookDB/Schema/DB/BooksGenres.pm
 example/BookDB/lib/BookDB/Schema/DB/Borrower.pm
@@ -28,7 +21,6 @@ example/BookDB/lib/BookDB/Schema/DB/Format.pm
 example/BookDB/lib/BookDB/Schema/DB/Genre.pm
 example/BookDB/lib/BookDB/View/TT.pm
 example/BookDB/Makefile.PL
-example/BookDB/META.yml
 example/BookDB/README
 example/BookDB/root/book/form.tt
 example/BookDB/root/book/list.tt

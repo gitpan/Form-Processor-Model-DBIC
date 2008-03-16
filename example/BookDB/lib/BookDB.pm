@@ -13,8 +13,7 @@ our $VERSION = '0.02';
 BookDB->config( name => 'BookDB' );
 
 BookDB->config->{form} = {
-	no_fillin         => 1,
-	pre_load_forms    => 0,
+	pre_load_forms    => 1,
 	form_name_space   => 'BookDB::Form',
 	debug             => 1,
 };

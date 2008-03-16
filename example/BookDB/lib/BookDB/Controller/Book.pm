@@ -3,6 +3,7 @@ package BookDB::Controller::Book;
 use strict;
 use base 'Catalyst::Controller';
 use DateTime;
+use BookDB::Form::Book;
 
 =head1 NAME
 
@@ -60,6 +61,39 @@ sub form : Private {
     $c->res->redirect($c->uri_for('list'));
 }
 
+=item form (without Catalyst plugin)
+
+Handles displaying and validating the form without Catalyst
+Will save to the database on validation
+You must either put values into your HTML: value="[% form.fif.title %]"
+or set up FillInForm. In your forms, "object_class" should be your
+Result class, instead of the Catalyst <model><source_name>.
+
+=cut
+
+=pod
+
+sub form : Private 
+{
+    my ( $self, $c, $id ) = @_;
+
+    my $form = BookDB::Form::Book->new(item_id => $id, schema => $c->model('DB')->schema);
+    # put form and template in stash
+    $c->stash->{form} = $form;
+	$c->stash->{template} = 'book/form.tt';
+    $c->forward('View::TT');
+
+    # update form
+    $form->update_from_form( $c->req->parameters );
+    return unless $c->req->method eq 'POST' && $form->validated;
+
+	# get the new book that was just created by the form
+	my $new_book = $form->item;
+	# redirect to list. 
+    $c->res->redirect($c->uri_for('list'));
+}
+
+=cut
 
 =item default
 
@@ -134,8 +168,6 @@ sub view : Local {
 	return if !$validated;
 
 	# form validated
-    # Rredisplays the form so that user can see that
-	# checked out status has changed	
     $c->stash->{message} = 'Book checked out';
 }
 

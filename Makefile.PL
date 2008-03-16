@@ -10,7 +10,7 @@ WriteMakefile(
     PL_FILES            => {},
     PREREQ_PM => {
         'Test::More'      => 0,
-        'Form::Processor' => 0,
+        'Form::Processor' => 0.18,
         'DBIx::Class'     => 0,
         'Carp'            => 0,
     },

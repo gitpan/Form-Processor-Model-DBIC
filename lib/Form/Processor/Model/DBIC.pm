@@ -4,7 +4,7 @@ use warnings;
 use base 'Form::Processor';
 use Carp;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 =head1 NAME
 
@@ -67,7 +67,7 @@ For an input field:
    <p>
    [% f = form.field('address') %]
    <label class="label" for="[% f.name %]">[% f.label || f.name %]</label>
-   <input type="[% f.type %]" name="[% f.name %]" id="[% f.name %]" value="[% f.value | html %]">
+   <input type="text" name="[% f.name %]" id="[% f.name %]">
    </p>
 
 
@@ -92,7 +92,7 @@ active_column).
    <p>
    [% f = form.field('hobbies') %]
    <label class="label" for="[% f.name %]">[% f.label || f.name %]</label>
-   <select name="[% f.name %]" MULTIPLE size="[% f.size %]">
+   <select name="[% f.name %]" multiple="multiple" size="[% f.size %]">
      [% FOR option IN f.options %]
        <option value="[% option.value %]" [% FOREACH selval IN f.value %][% IF selval == option.value %]selected="selected"[% END %][% END %]>[% option.label | html %]</option>
      [% END %] 
@@ -121,13 +121,14 @@ Then in a Catalyst controller (with Catalyst::Plugin::Form::Processor):
     }
 
 With the Catalyst plugin the schema is retrieved from the Catalyst context 
-($c->model()...), but it can also be set with $form->schema($myschema) or
-sub schema { # return something useful } in a form class.
+($c->model()...), but it can also be set by passing in the schema on "new",
+or setting with $form->schema($schema)
 
 In MyApp.pm (the application root controller) config Catalyst::Plugin::F::P:
 
     BookDB->config->{form} = {
-        no_fillin         => 1,  # usually you want F::P to handle this, not FIF 
+        no_fillin         => 0,  # Set if you don't want FillInForm
+                                 # to fill in your form values 
         pre_load_forms    => 1,  # don't set pre_load if using auto fields
         form_name_space   => 'MyApp::Form',
         debug             => 1,
@@ -241,6 +242,8 @@ These attributes are usually accessed in a subroutine or in a template.
    error_field_names [% FOREACH name IN form.error_field_names %]
    sorted_fields     [% FOREACH field IN form.sorted_fields %]
    uuid              subroutine that returns a uuid
+   fif               value="[% form.fif.title %]"
+   params            Same as fif, but password fields aren't stripped
    
 =head2 L<Form::Processor::Field> subroutines to subclass in a Field class
 
@@ -261,7 +264,8 @@ that they can pass in their DBIx::Class schema object.
 =cut
 
 use Rose::Object::MakeMethods::Generic (
-   scalar => ['schema'],    # To pass in a DBIx::Class schema object
+   scalar => ['schema' => { interface => 'get_set_init'},
+              'source_name' => {},],
 );
 
 =head2 update_from_form
@@ -509,7 +513,6 @@ The currently selected values in a Multiple list are grouped at the top
 sub lookup_options
 {
    my ( $self, $field ) = @_;
-   $DB::single = 1;
    my $field_name = $field->name;
 
    # if this field doesn't refer to a foreign key, return
@@ -521,7 +524,7 @@ sub lookup_options
 
    # This field refers to foreign table, so continue.
 
-   my $source = $self->source($f_class);
+   my $source = $self->schema->source($f_class);
 
    # this is a bit messy, but leaving here for now since
    # it will probably get even more complicated in the future...
@@ -564,7 +567,7 @@ sub lookup_options
    }
 
    # get an array of row objects
-   my @rows = $self->resultset($f_class)->search( $criteria, { order_by => $sort_col } )->all;
+   my @rows = $self->schema->resultset($source->source_name)->search( $criteria, { order_by => $sort_col } )->all;
 
    return [
       map {
@@ -601,12 +604,12 @@ sub init_value
 
    if ( !$source->has_relationship($column) )    # We already know it "can" $column
    {
-      return $item->$column;
+      return ($item->$column);
    }
    elsif ( $source->relationship_info($column)->{attrs}->{accessor} eq 'single' ||
            $source->relationship_info($column)->{attrs}->{accessor} eq 'filter' )
    {
-      return $item->$column->id;
+      return ($item->$column->id);
    }
 
    # this is a 'has_many' relationship and we must return an array of row objects
@@ -677,24 +680,34 @@ in your form class (or form base class) if your ids do not match that pattern.
 sub init_item
 {
    my $self = shift;
-
-   unless ( exists $self->{schema} )
-   {
-      if ( $self->user_data->{context} )
-      {
-         my ( $model, $moniker ) = split( '::', $self->object_class );
-         $self->schema( $self->user_data->{context}->model($model)->schema );
-      }
-      else
-      {
-         $self->{errors} = 'No DBIC schema available to Form::Processor';
-         return;
-      }
-   }
-
    my $item_id = $self->item_id or return;
    return unless $item_id =~ /^\d+$/;
    return $self->resultset->find($item_id);
+}
+
+
+=head2 init_schema
+
+Initializes the DBIx::Class schema. User may override. Non-Catalyst
+users should pass schema in on new:  
+$my_form_class->new(item_id = $id, schema = $schema)
+
+=cut
+
+sub init_schema
+{
+   my $self = shift;
+   return if defined $self->{schema};
+   if ( my $c = $self->user_data->{context} ) 
+   {
+       # starts out <model>::<source_name>
+       my $schema = $c->model( $self->object_class )->result_source->schema;
+       # change object_class to source_name
+       $self->source_name( $c->model( $self->object_class )->result_source->source_name );
+       return $schema;
+   }
+   die "Unable to find DBIx::Class schema";
+
 }
 
 =head2 source
@@ -706,9 +719,7 @@ Returns a DBIx::Class::ResultSource object for this Result Class.
 sub source
 {
    my ( $self, $f_class ) = @_;
-   my $class = $f_class ? $f_class : $self->object_class;
-   my ($moniker) = $class =~ /::(\w+)$/;
-   return $self->schema->source($moniker);
+   return $self->schema->source($self->source_name || $self->object_class);
 }
 
 =head2 resultset
@@ -722,9 +733,7 @@ a relationship.
 sub resultset
 {
    my ( $self, $f_class ) = @_;
-   my $class = $f_class ? $f_class : $self->object_class;
-   my ($moniker) = $class =~ /::(\w+)$/;
-   return $self->schema->resultset($moniker);
+   return $self->schema->resultset($self->source_name || $self->object_class);
 }
 
 =head2 many_to_many
@@ -785,7 +794,6 @@ sub build_form
       my $required = 'required' eq $group;
       $self->_build_fields( $profile->{$group}, $required );
       my $auto_fields = $profile->{ 'auto_' . $group } || next;
-      my $item = $self->item;  # need init_item for auto fields
       $self->_build_fields( $auto_fields, $required );
    }
 }

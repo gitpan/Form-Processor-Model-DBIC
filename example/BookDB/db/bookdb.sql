@@ -24,7 +24,7 @@ CREATE TABLE borrower (
     email varchar(100)
 );
 INSERT INTO borrower VALUES(1,'In Shelf',NULL,'','');
-INSERT INTO borrower VALUES(2,'Matt Trout','46 99 23 97','http://www.shadowcat.com/','mst@somehwere.com');
+INSERT INTO borrower VALUES(2,'Mark Trout','46 99 23 97','http://www.somewhere.com/','mst@somehwere.com');
 INSERT INTO borrower VALUES(3,'John Doe', '234-345-12345','http://nowhere.com/','doe@gmail.com');
 INSERT INTO borrower VALUES(4,'Gigi LePew','456-234-9876','http://lepew.org/','gigi@email.com');
 
