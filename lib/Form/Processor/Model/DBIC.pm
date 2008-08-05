@@ -4,7 +4,7 @@ use warnings;
 use base 'Form::Processor';
 use Carp;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 =head1 NAME
 
@@ -97,7 +97,7 @@ active_column).
        <option value="[% option.value %]" [% FOREACH selval IN f.value %][% IF selval == option.value %]selected="selected"[% END %][% END %]>[% option.label | html %]</option>
      [% END %] 
    </select>
-   </p>:
+   </p>
 
 For a complex, widget-based TT setup, see the examples directory in the
 L<Catalyst::Plugin::Form::Processor> CPAN download.
@@ -213,6 +213,7 @@ These attributes are usually accessed in a subroutine or in a template.
    dependency    Array of arrays of field names. If one name has a value, all
                        fields in the list are set to 'required'
    unique        Arrayref of field names that should be unique in db
+                     or Hashref that also sets message 
 
 =head2 Subroutines for your form (not subclassed)
 
@@ -630,6 +631,14 @@ sub init_value
 
 For fields that are marked "unique", checks the database for uniqueness.
 
+   arraryref:
+        unique => ['user_id', 'username']
+
+   or hashref:
+        unique => {
+            username => 'That username is already taken',
+        }
+
 =cut
 
 sub validate_unique
@@ -641,7 +650,23 @@ sub validate_unique
    my $rs          = $self->resultset;
    my $found_error = 0;
 
-   for my $field ( map { $self->field($_) } @$unique )
+   my @unique_fields;
+   my $error_message;
+   if ( ref($unique) eq 'ARRAY' ) 
+   {
+      @unique_fields = @$unique;
+      $error_message = 'Value must be unique in the database';
+   } 
+   elsif ( ref($unique) eq 'HASH' ) 
+   {
+       @unique_fields = keys %$unique;
+   } 
+   else 
+   {
+      return;
+   }
+
+   for my $field ( map { $self->field($_) } @unique_fields )
    {
 
       next if $field->errors;
@@ -652,8 +677,9 @@ sub validate_unique
       # unique means there can only be one in the database like it.
       my $count = $rs->search( { $name => $value } )->count;
 
-      next if $count <= 1;
-      $field->add_error('Value must be unique in the database');
+      next if $count < 1;
+        $field->add_error($error_message
+           || $self->profile->{'unique'}->{$name});
       $found_error++;
    }
 
@@ -666,7 +692,7 @@ This is called first time $form->item is called.
 If using the Catalyst plugin, it sets the DBIx::Class schema from
 the Catalyst context, and the model specified as the first part
 of the object_class in the form. If not using Catalyst, it uses
-the "schema" set in the form.
+the "schema" passed in on "new".
 
 It then does:  
 
@@ -690,7 +716,7 @@ sub init_item
 
 Initializes the DBIx::Class schema. User may override. Non-Catalyst
 users should pass schema in on new:  
-$my_form_class->new(item_id = $id, schema = $schema)
+$my_form_class->new(item_id => $id, schema => $schema)
 
 =cut
 
@@ -778,8 +804,7 @@ sub many_to_many
 
 These methods from Form::Processor are subclassed here to allow 
 combining "required" and "optional" lists in one "fields" list, 
-with "required" set like other field attributes. Also makes sure
-that the "item" is initialized.
+with "required" set like other field attributes.
 
 =cut
 

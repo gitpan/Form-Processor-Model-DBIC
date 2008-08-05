@@ -41,6 +41,9 @@ sub profile {
                 order => 3,
             },
 		},
+      unique => {
+         name => 'That name is already in our user directory'
+      },
 	};
 }
 
