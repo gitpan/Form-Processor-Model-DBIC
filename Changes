@@ -1,5 +1,9 @@
 Revision history for Form-Processor-Model-DBIC
 
+0.05  08/06/2008
+        Fixed bug in the fix for handling "unique" fields
+        Added support for name_prefix
+
 0.04  08/05/2008
         Fixed bug in handling "unique" fields
         Added hashref for unique to allow setting messages per unique field
