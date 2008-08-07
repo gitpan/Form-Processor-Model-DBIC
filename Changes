@@ -1,5 +1,8 @@
 Revision history for Form-Processor-Model-DBIC
 
+0.06  08/06/2008
+        Actually PROVIDE the changed module
+
 0.05  08/06/2008
         Fixed bug in the fix for handling "unique" fields
         Added support for name_prefix

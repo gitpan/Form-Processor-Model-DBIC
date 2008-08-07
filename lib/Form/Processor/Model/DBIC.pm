@@ -4,7 +4,7 @@ use warnings;
 use base 'Form::Processor';
 use Carp;
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 =head1 NAME
 
@@ -334,7 +334,15 @@ sub update_model
    my $source = $self->source;
 
    # get a hash of all fields, skipping fields marked 'noupdate'
-   my %fields = map { $_->name, $_ } grep { !$_->noupdate } $self->fields;
+   my $prefix = $self->name_prefix;
+   my %fields;
+   foreach ($self->fields)
+   {
+      next if $_->noupdate;
+      my $name = $_->name;
+      $name =~ s/^$prefix\.//g if $prefix;
+      $fields{$name} = $_; 
+   }
    my %data;
    my $field;
    my $value;
@@ -514,7 +522,10 @@ The currently selected values in a Multiple list are grouped at the top
 sub lookup_options
 {
    my ( $self, $field ) = @_;
+
    my $field_name = $field->name;
+   my $prefix = $self->name_prefix;
+   $field_name =~ s/^$prefix\.//g if $prefix;
 
    # if this field doesn't refer to a foreign key, return
    my $rel_info = $self->source->relationship_info($field_name);
@@ -535,7 +546,7 @@ sub lookup_options
 
       # This is a 'has_many' relationship with a mapping table
       my ( $self_rel, $self_col, $foreign_rel, $foreign_col ) =
-        $self->many_to_many( $field->name );
+        $self->many_to_many( $field_name );
 
       $f_class = $source->related_class($foreign_rel);
       $source  = $source->related_source($foreign_rel);
@@ -595,6 +606,9 @@ sub init_value
    my ( $self, $field, $item ) = @_;
 
    my $column = $field->name;
+   my $prefix = $self->name_prefix;
+   $column =~ s/$prefix\.//g if $prefix;
+
    $item ||= $self->item;
    return                  unless $item;
    return $item->{$column} unless $item->isa('DBIx::Class');
@@ -673,13 +687,20 @@ sub validate_unique
       my $value = $field->value;
       next unless defined $value;
       my $name = $field->name;
+      my $prefix = $self->name_prefix;
+      $name =~ s/^$prefix\.//g if $prefix;
 
       # unique means there can only be one in the database like it.
       my $count = $rs->search( { $name => $value } )->count;
 
+      # not found, this one is unique
       next if $count < 1;
-        $field->add_error($error_message
-           || $self->profile->{'unique'}->{$name});
+      # found this value, but it's the same row we're updating
+      next if $count == 1 
+           && $self->item_id 
+           && $self->item_id == $rs->search({$name => $value})->first->id; 
+      $field->add_error($error_message
+          || $self->profile->{'unique'}->{$name});
       $found_error++;
    }
 
