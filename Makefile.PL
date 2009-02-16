@@ -1,19 +1,22 @@
 use strict;
 use warnings;
-use ExtUtils::MakeMaker;
+use inc::Module::Install;
 
-WriteMakefile(
-    NAME                => 'Form::Processor::Model::DBIC',
-    AUTHOR              => 'Gerda Shank <gs364@cornell.edu>',
-    VERSION_FROM        => 'lib/Form/Processor/Model/DBIC.pm',
-    ABSTRACT_FROM       => 'lib/Form/Processor/Model/DBIC.pm',
-    PL_FILES            => {},
-    PREREQ_PM => {
-        'Test::More'      => 0,
-        'Form::Processor' => 0.18,
-        'DBIx::Class'     => 0,
-        'Carp'            => 0,
-    },
-    dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
-    clean               => { FILES => 'Form-Processor-Model-DBIC-*' },
-);
+name 'Form-Processor-Model-DBIC';
+all_from 'lib/Form/Processor/Model/DBIC.pm';
+license 'perl';
+
+# prereqs
+requires 'Form::Processor';
+requires 'DBIx::Class';
+requires 'Carp';
+
+# things the tests need
+build_requires 'Test::More'      => '0.77';
+
+tests_recursive();
+
+auto_install();
+
+WriteAll();
+

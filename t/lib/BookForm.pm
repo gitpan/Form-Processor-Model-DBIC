@@ -1,7 +1,5 @@
 package BookForm;
 
-use strict;
-use warnings;
 use base 'Form::Processor::Model::DBIC';
 
 =head1 NAME
@@ -18,7 +16,7 @@ Catalyst Form.
 
 =cut
 
-sub object_class { 'DB::Book' }
+sub object_class {  'Book' }
 
 sub profile {
 	my $self = shift;
@@ -34,13 +32,13 @@ sub profile {
 			},
 			author  => {
 				type => 'Text',
-				label => 'Author:',
+				label => 'Author',
 				order => '2',
 			},
             # has_many relationship pointing to mapping table
-			books_genres    => {
+			genres    => {
 				type => 'Multiple',
-				label => 'Genres:',
+				label => 'Genres',
                 label_column => 'name',
 			    order => '3',
             },
@@ -51,28 +49,32 @@ sub profile {
 			},
 			publisher    => {
 				type => 'Text',
-				label => 'Publisher:',
+				label => 'Publisher',
 			    order => '4',
 			},
 			format       => {
 				type => 'Select',
-				label => 'Format:',
+				label => 'Format',
 			    order => '6',
 			},
 			year         => {
 				type => 'Integer',
 				range_start => '1900',
 				range_end => '2020',
-				label => 'Year:',
+				label => 'Year',
 				order => '7',
 			},
 			pages        => {
 				type => 'Integer',
-				label => 'Pages:',
+				label => 'Pages',
 				order => '8',
 			},
+         comment      => {
+            type => 'Text',
+            order => 9,
+         },
 		},
-		unique => ['isbn'],
+      unique => ['isbn'],
 	};
 }
 
