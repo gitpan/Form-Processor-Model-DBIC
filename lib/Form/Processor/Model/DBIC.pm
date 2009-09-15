@@ -3,7 +3,7 @@ package Form::Processor::Model::DBIC;
 use base 'Form::Processor';
 use Carp;
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 =head1 NAME
 
