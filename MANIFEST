@@ -62,7 +62,6 @@ inc/Module/Install/Metadata.pm
 inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
 lib/Form/Processor/Model/DBIC.pm
-lib/Form/Processor/Model/DBIC.pm.new
 Makefile.PL
 MANIFEST			This list of files
 META.yml
@@ -72,6 +71,7 @@ t/01-dbic.t
 t/02-form.t
 t/book.t
 t/db/book.db
+t/db/bookd.db
 t/db/bookdb.sql
 t/lib/BookForm.pm
 t/lib/Schema/DB.pm
